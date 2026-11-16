@@ -1,0 +1,331 @@
+{
+  "environment": {
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+    "python": "3.11.16",
+    "torch": "2.6.0+cu124",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "reranker_model": "BAAI/bge-reranker-base"
+  },
+  "corpus": {
+    "labels": 250,
+    "passages": 6589,
+    "graph": {
+      "nodes": 291,
+      "edges": 3583,
+      "nodes_by_kind": {
+        "DRUG": 246,
+        "ENZYME": 16,
+        "CLASS": 29
+      },
+      "edges_by_relation": {
+        "INTERACTS_WITH": 2898,
+        "SUBSTRATE_OF": 169,
+        "MEMBER_OF": 136,
+        "INDUCES": 11,
+        "CONTRAINDICATED_WITH": 320,
+        "INHIBITS": 49
+      }
+    }
+  },
+  "dataset": {
+    "total": 149,
+    "dev": 52,
+    "test": 97,
+    "test_answerable": 63,
+    "test_unanswerable": 34
+  },
+  "retrieval_test": {
+    "BM25": {
+      "hit@1": 0.5238095238095238,
+      "hit@3": 0.6666666666666666,
+      "mrr@10": 0.6031053162005543,
+      "ndcg@10": 0.49527299514119727,
+      "hit@3_ci": [
+        0.5396825396825397,
+        0.7777777777777778
+      ],
+      "latency_p50_ms": 0.5395999996835599,
+      "latency_p95_ms": 1.6925199997785967,
+      "hit@3_by_category": {
+        "direct": 0.9473684210526315,
+        "brand": 0.16666666666666666,
+        "drug_class": 0.6666666666666666,
+        "mechanism": 0.8333333333333334,
+        "single_drug": 0.5
+      }
+    },
+    "Dense (bge-small, HNSW)": {
+      "hit@1": 0.5396825396825397,
+      "hit@3": 0.6825396825396826,
+      "mrr@10": 0.6204144620811288,
+      "ndcg@10": 0.4868765095928676,
+      "hit@3_ci": [
+        0.5555555555555556,
+        0.7936507936507936
+      ],
+      "latency_p50_ms": 12.316800000007788,
+      "latency_p95_ms": 13.994640000055364,
+      "hit@3_by_category": {
+        "direct": 0.7894736842105263,
+        "brand": 0.4166666666666667,
+        "drug_class": 0.75,
+        "mechanism": 0.5833333333333334,
+        "single_drug": 0.875
+      }
+    },
+    "Hybrid (BM25 + dense, RRF)": {
+      "hit@1": 0.5873015873015873,
+      "hit@3": 0.6984126984126984,
+      "mrr@10": 0.6632905013857395,
+      "ndcg@10": 0.5547026926149601,
+      "hit@3_ci": [
+        0.5714285714285714,
+        0.8095238095238095
+      ],
+      "latency_p50_ms": 13.4911999994074,
+      "latency_p95_ms": 16.196319999653493,
+      "hit@3_by_category": {
+        "direct": 0.8947368421052632,
+        "brand": 0.3333333333333333,
+        "drug_class": 0.6666666666666666,
+        "mechanism": 0.75,
+        "single_drug": 0.75
+      }
+    },
+    "Hybrid + cross-encoder": {
+      "hit@1": 0.6825396825396826,
+      "hit@3": 0.8412698412698413,
+      "mrr@10": 0.7612874779541445,
+      "ndcg@10": 0.6183634270580461,
+      "hit@3_ci": [
+        0.746031746031746,
+        0.9206349206349206
+      ],
+      "latency_p50_ms": 132.51480000053562,
+      "latency_p95_ms": 137.70064000036655,
+      "hit@3_by_category": {
+        "direct": 0.9473684210526315,
+        "brand": 0.6666666666666666,
+        "drug_class": 0.75,
+        "mechanism": 1.0,
+        "single_drug": 0.75
+      }
+    },
+    "Hybrid + entity linking + graph": {
+      "hit@1": 0.746031746031746,
+      "hit@3": 0.8888888888888888,
+      "mrr@10": 0.8260582010582012,
+      "ndcg@10": 0.7291075335033982,
+      "hit@3_ci": [
+        0.8095238095238095,
+        0.9523809523809523
+      ],
+      "latency_p50_ms": 13.881199999559612,
+      "latency_p95_ms": 17.71195999954216,
+      "hit@3_by_category": {
+        "direct": 0.9473684210526315,
+        "brand": 1.0,
+        "drug_class": 0.75,
+        "mechanism": 1.0,
+        "single_drug": 0.625
+      }
+    },
+    "Full pipeline": {
+      "hit@1": 0.7777777777777778,
+      "hit@3": 0.9047619047619048,
+      "mrr@10": 0.8393298059964727,
+      "ndcg@10": 0.7129003869410726,
+      "hit@3_ci": [
+        0.8253968253968254,
+        0.9682539682539683
+      ],
+      "latency_p50_ms": 132.419900000059,
+      "latency_p95_ms": 138.43998000011197,
+      "hit@3_by_category": {
+        "direct": 1.0,
+        "brand": 0.9166666666666666,
+        "drug_class": 0.75,
+        "mechanism": 1.0,
+        "single_drug": 0.75
+      }
+    }
+  },
+  "paired_full_vs_baseline": {
+    "baseline": "Hybrid + cross-encoder",
+    "full_only_hits": 4,
+    "baseline_only_hits": 0,
+    "hit@3_difference_ci": [
+      0.015873015873015872,
+      0.12698412698412698
+    ]
+  },
+  "hnsw_recall@10_vs_exact": 0.9958762886597937,
+  "gate": {
+    "calibrated_on": "dev split (52 queries)",
+    "threshold_combined": 0.23126220703125,
+    "threshold_relevance_only": 0.23126220703125,
+    "configured_threshold": 0.23,
+    "auroc_max_logit_test": 0.9841269841269841,
+    "variants_test": {
+      "No gate": {
+        "refusal_recall": 0.0,
+        "refusal_recall_ci": [
+          0.0,
+          0.0
+        ],
+        "false_refusal_rate": 0.0,
+        "false_refusal_rate_ci": [
+          0.0,
+          0.0
+        ],
+        "balanced_accuracy": 0.5,
+        "refusal_recall_by_category": {
+          "neg_fictional": 0.0,
+          "neg_out_of_corpus": 0.0,
+          "neg_off_topic": 0.0,
+          "neg_unsupported": 0.0
+        }
+      },
+      "Relevance threshold only": {
+        "refusal_recall": 0.9411764705882353,
+        "refusal_recall_ci": [
+          0.8529411764705882,
+          1.0
+        ],
+        "false_refusal_rate": 0.031746031746031744,
+        "false_refusal_rate_ci": [
+          0.0,
+          0.07936507936507936
+        ],
+        "balanced_accuracy": 0.9547152194211017,
+        "refusal_recall_by_category": {
+          "neg_fictional": 1.0,
+          "neg_out_of_corpus": 1.0,
+          "neg_off_topic": 1.0,
+          "neg_unsupported": 0.8461538461538461
+        }
+      },
+      "Vocabulary check only": {
+        "refusal_recall": 0.4411764705882353,
+        "refusal_recall_ci": [
+          0.29411764705882354,
+          0.6176470588235294
+        ],
+        "false_refusal_rate": 0.0,
+        "false_refusal_rate_ci": [
+          0.0,
+          0.0
+        ],
+        "balanced_accuracy": 0.7205882352941176,
+        "refusal_recall_by_category": {
+          "neg_fictional": 0.8888888888888888,
+          "neg_out_of_corpus": 0.8333333333333334,
+          "neg_off_topic": 0.3333333333333333,
+          "neg_unsupported": 0.0
+        }
+      },
+      "Combined (shipped)": {
+        "refusal_recall": 0.9411764705882353,
+        "refusal_recall_ci": [
+          0.8529411764705882,
+          1.0
+        ],
+        "false_refusal_rate": 0.031746031746031744,
+        "false_refusal_rate_ci": [
+          0.0,
+          0.07936507936507936
+        ],
+        "balanced_accuracy": 0.9547152194211017,
+        "refusal_recall_by_category": {
+          "neg_fictional": 1.0,
+          "neg_out_of_corpus": 1.0,
+          "neg_off_topic": 1.0,
+          "neg_unsupported": 0.8461538461538461
+        }
+      }
+    }
+  },
+  "end_to_end_test": {
+    "answerable_queries": 63,
+    "answered_with_gold_evidence": 0.873015873015873,
+    "answered_with_gold_evidence_ci": [
+      0.7936507936507936,
+      0.9523809523809523
+    ],
+    "answered_without_gold_evidence": 0.09523809523809523,
+    "wrongly_refused": 0.031746031746031744,
+    "unanswerable_queries": 34,
+    "correctly_refused": 0.9411764705882353,
+    "answered_despite_no_evidence": [
+      "Is there a documented interaction between famotidine and finasteride?",
+      "Is there a documented interaction between nitrofurantoin and montelukast?"
+    ],
+    "wrongly_refused_queries": [
+      "Should fluoroquinolones be avoided in patients on tizanidine?",
+      "Who should not take dronedarone?"
+    ]
+  },
+  "inhibitor_inducer_edges": [
+    "amiodarone INHIBITS CYP1A2 (2 passages)",
+    "amiodarone INHIBITS CYP2C9 (3 passages)",
+    "amiodarone INHIBITS CYP2D6 (3 passages)",
+    "atazanavir INHIBITS CYP3A4 (4 passages)",
+    "atazanavir INHIBITS UGT1A1 (2 passages)",
+    "bosentan INDUCES CYP2C19 (2 passages)",
+    "bosentan INDUCES CYP2C9 (4 passages)",
+    "bosentan INDUCES CYP3A4 (4 passages)",
+    "bupropion INHIBITS CYP2D6 (2 passages)",
+    "carbamazepine INDUCES CYP3A4 (24 passages)",
+    "cimetidine INHIBITS CYP3A4 (5 passages)",
+    "ciprofloxacin INHIBITS CYP1A2 (10 passages)",
+    "ciprofloxacin INHIBITS CYP3A4 (2 passages)",
+    "clarithromycin INHIBITS CYP3A4 (19 passages)",
+    "clopidogrel INHIBITS CYP2C8 (3 passages)",
+    "clopidogrel INHIBITS CYP2C9 (2 passages)",
+    "cyclosporine INHIBITS CYP3A4 (7 passages)",
+    "cyclosporine INHIBITS P-gp (10 passages)",
+    "dasatinib INHIBITS CYP3A4 (4 passages)",
+    "diltiazem INHIBITS CYP3A4 (8 passages)",
+    "dronedarone INHIBITS CYP2D6 (3 passages)",
+    "dronedarone INHIBITS CYP3A4 (3 passages)",
+    "duloxetine INHIBITS CYP1A2 (2 passages)",
+    "duloxetine INHIBITS CYP2D6 (2 passages)",
+    "erythromycin INHIBITS CYP3A4 (30 passages)",
+    "fluconazole INHIBITS CYP2C19 (2 passages)",
+    "fluconazole INHIBITS CYP2C9 (6 passages)",
+    "fluconazole INHIBITS CYP3A4 (7 passages)",
+    "fluoxetine INHIBITS CYP2D6 (11 passages)",
+    "fluvoxamine INHIBITS CYP1A2 (8 passages)",
+    "fluvoxamine INHIBITS CYP2C19 (2 passages)",
+    "fluvoxamine INHIBITS CYP2C9 (2 passages)",
+    "fluvoxamine INHIBITS CYP3A4 (2 passages)",
+    "gemfibrozil INHIBITS CYP2C8 (6 passages)",
+    "gemfibrozil INHIBITS OATP1B1 (2 passages)",
+    "imatinib INHIBITS CYP2D6 (2 passages)",
+    "itraconazole INHIBITS BCRP (2 passages)",
+    "itraconazole INHIBITS CYP3A4 (30 passages)",
+    "ketoconazole INHIBITS CYP3A4 (61 passages)",
+    "ketoconazole INHIBITS P-gp (2 passages)",
+    "mirabegron INHIBITS CYP2D6 (2 passages)",
+    "omeprazole INHIBITS CYP2C19 (6 passages)",
+    "paroxetine INHIBITS CYP2D6 (9 passages)",
+    "phenobarbital INDUCES CYP3A4 (8 passages)",
+    "phenytoin INDUCES CYP3A4 (19 passages)",
+    "posaconazole INHIBITS CYP3A4 (5 passages)",
+    "rifabutin INDUCES CYP3A4 (5 passages)",
+    "rifampin INDUCES CYP2C19 (2 passages)",
+    "rifampin INDUCES CYP2C9 (2 passages)",
+    "rifampin INDUCES CYP3A4 (32 passages)",
+    "rifampin INDUCES P-gp (3 passages)",
+    "ritonavir INHIBITS CYP2C9 (2 passages)",
+    "ritonavir INHIBITS CYP2D6 (5 passages)",
+    "ritonavir INHIBITS CYP3A4 (39 passages)",
+    "ritonavir INHIBITS P-gp (3 passages)",
+    "terbinafine INHIBITS CYP2D6 (2 passages)",
+    "verapamil INHIBITS CYP3A4 (6 passages)",
+    "voriconazole INHIBITS CYP2C19 (7 passages)",
+    "voriconazole INHIBITS CYP2C9 (3 passages)",
+    "voriconazole INHIBITS CYP3A4 (14 passages)"
+  ]
+}

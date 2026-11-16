@@ -1,0 +1,67 @@
+# BioMed-GraphRAG configuration. Paths are relative to the repository root.
+
+paths:
+  corpus_file: "data/corpus.jsonl.gz"        # versioned corpus snapshot
+  labels_cache_dir: "data/raw/labels"        # per-drug ingestion cache (not versioned)
+  index_dir: "data/index"                    # built artefacts (not versioned)
+  eval_dataset: "eval/dataset.jsonl"
+
+ingestion:
+  openfda:
+    base_url: "https://api.fda.gov/drug/label.json"
+    requests_per_minute: 200                 # openFDA allows 240/min without an API key
+
+chunking:
+  target_tokens: 220                         # approximate (word/punctuation) tokens
+  overlap_tokens: 40
+
+dense:
+  model_name: "BAAI/bge-small-en-v1.5"
+  query_instruction: "Represent this sentence for searching relevant passages: "
+  batch_size: 64
+  hnsw:
+    M: 32
+    ef_construction: 200
+    ef_search: 128
+  device: "auto"                             # auto | cuda | cpu
+
+sparse:
+  k1: 1.5
+  b: 0.75
+
+fusion:
+  rrf_k: 60
+  candidates_per_channel: 30
+  pool_size: 20                              # candidates sent to the cross-encoder
+  weights:
+    dense: 1.0
+    sparse: 1.0
+    graph: 1.0
+
+graph:
+  max_chunks: 12                             # evidence chunks contributed per query
+  chunks_per_edge: 3
+
+reranker:
+  model_name: "BAAI/bge-reranker-base"
+  max_length: 384
+  batch_size: 32
+  top_k: 3                                   # passages handed to the generator
+  device: "auto"
+
+gate:
+  # Refuse when the best cross-encoder logit is below this value. Calibrated on the
+  # dev split by eval/run_evaluation.py (it prints the value to use); see eval/RESULTS.md.
+  logit_threshold: 0.23
+  # Refuse when the query names something that looks like a drug but cannot be
+  # linked to the corpus vocabulary (see core/gate.py).
+  refuse_on_unknown_drug: true
+  refusal_message: >-
+    INSUFFICIENT_EVIDENCE: the indexed FDA labels do not contain evidence that
+    answers this question.
+
+generator:
+  gemini_model: "gemini-2.5-flash"
+  openai_model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 700

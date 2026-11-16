@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioMed-GraphRAG</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #14181f; --muted: #5b6573; --line: #dfe3e8;
+    --accent: #0b6e6e; --accent-soft: #e2f1f0; --ok: #1a7f4b; --ok-soft: #e3f4ea;
+    --stop: #a8322a; --stop-soft: #fbe9e7; --dense: #3b5bdb; --sparse: #b35c00; --graph: #7a3eb1;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101317; --panel: #181c22; --ink: #e8ebef; --muted: #98a2b0; --line: #2a303a;
+      --accent: #4fc3bd; --accent-soft: #15302f; --ok: #5fd08f; --ok-soft: #14301f;
+      --stop: #f08a80; --stop-soft: #3a1c19; --dense: #8ea2ff; --sparse: #f0a85a; --graph: #c79bf2;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  .sub { color: var(--muted); margin: 4px 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+  form { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; min-width: 0; padding: 11px 13px; font: inherit; color: var(--ink); background: var(--bg);
+                     border: 1px solid var(--line); border-radius: 8px; }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 0 18px; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { button.primary { color: #06201f; } }
+  button:disabled { opacity: 0.6; cursor: wait; }
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .examples button { padding: 5px 10px; font-size: 13px; color: var(--muted); }
+  .examples button:hover { color: var(--ink); border-color: var(--accent); }
+  .examples .tag { font-size: 11px; color: var(--accent); margin-right: 4px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.stop { background: var(--stop-soft); color: var(--stop); }
+  .meta { color: var(--muted); font-size: 13px; margin-left: 8px; }
+  .answer { margin-top: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .cite { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } form { flex-direction: column; } button.primary { padding: 10px; } }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .card header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-bottom: 6px; }
+  .card .num { font-weight: 700; color: var(--accent); }
+  .card .title { font-weight: 600; }
+  .card .section { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  .card a { font-size: 13px; color: var(--accent); }
+  .chip { display: inline-block; font: 11px var(--mono); padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; margin-right: 4px; }
+  .chip.dense { color: var(--dense); } .chip.sparse { color: var(--sparse); } .chip.graph { color: var(--graph); }
+  .entity { display: inline-block; background: var(--accent-soft); border-radius: 6px; padding: 2px 8px; margin: 0 6px 6px 0; font-size: 13px; }
+  .entity small { color: var(--muted); }
+  .path { font: 13px var(--mono); margin: 0 0 8px; overflow-wrap: anywhere; }
+  .path .rel { color: var(--graph); }
+  .path .kind { font: 11px system-ui; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 8px 5px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; font-family: var(--mono); }
+  tr.cut td { border-bottom: 2px dashed var(--stop); }
+  .timing { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); margin: 6px 0; }
+  .timing span { display: block; height: 100%; }
+  .legend { font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 4px 0 10px; }
+  .hidden { display: none; }
+  .error { color: var(--stop); }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>BioMed-GraphRAG</h1>
+  <p class="sub">Drug-interaction answers grounded in FDA prescribing information. <span id="stats"></span></p>
+
+  <section class="panel">
+    <form id="form">
+      <input id="q" type="text" autocomplete="off" maxlength="500" aria-label="Question"
+             placeholder="Ask about an interaction, e.g. Can I take Viagra with Nitrostat?">
+      <button class="primary" id="go" type="submit">Ask</button>
+    </form>
+    <div class="examples" id="examples"></div>
+  </section>
+
+  <section class="panel hidden" id="result">
+    <div><span class="badge" id="badge"></span><span class="meta" id="meta"></span></div>
+    <div class="answer" id="answer"></div>
+  </section>
+
+  <div class="grid hidden" id="details">
+    <section class="panel">
+      <h2>Cited evidence</h2>
+      <div id="citations"></div>
+    </section>
+    <section class="panel">
+      <h2>How the answer was found</h2>
+      <h2 style="margin-top:4px">1 · Entities linked</h2>
+      <div id="entities"></div>
+      <h2 style="margin-top:14px">2 · Knowledge-graph paths</h2>
+      <div id="paths"></div>
+      <h2 style="margin-top:14px">3 · Candidates after fusion and reranking</h2>
+      <div class="tablewrap"><table id="candidates"></table></div>
+      <h2 style="margin-top:14px">4 · Latency</h2>
+      <div class="timing" id="timing"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+  </div>
+
+  <footer>Research demo, not medical advice. Source text: openFDA drug labels (public domain).</footer>
+</main>
+
+<script>
+const EXAMPLES = [
+  ["brand names", "Can I take Viagra with Nitrostat?"],
+  ["mechanism", "Why would ketoconazole raise lurasidone concentrations?"],
+  ["drug class", "Are NSAIDs a problem for patients taking warfarin?"],
+  ["direct", "Is tizanidine contraindicated with ciprofloxacin?"],
+  ["should refuse", "What is the interaction between Zynorapid and warfarin?"],
+  ["should refuse", "What is the retail price of atorvastatin?"],
+];
+const STAGE_COLORS = { graph: "var(--graph)", sparse: "var(--sparse)", dense: "var(--dense)", fusion: "var(--muted)", rerank: "var(--accent)", generate: "var(--ok)" };
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+EXAMPLES.forEach(([tag, text]) => {
+  const b = el("button"); b.type = "button";
+  b.append(el("span", "tag", tag), document.createTextNode(text));
+  b.onclick = () => { $("q").value = text; ask(text); };
+  $("examples").append(b);
+});
+
+fetch("health").then(r => r.json()).then(h => {
+  $("stats").textContent = `${h.labels} labels · ${h.passages.toLocaleString()} passages · ${h.graph_edges.toLocaleString()} graph edges · ${h.device}`;
+}).catch(() => {});
+
+function channelChips(ranks) {
+  const frag = document.createDocumentFragment();
+  Object.entries(ranks).forEach(([ch, rank]) => frag.append(el("span", `chip ${ch}`, `${ch} #${rank}`)));
+  return frag;
+}
+
+function renderAnswer(text) {
+  const box = $("answer"); box.textContent = "";
+  text.split(/(\[\d+\])/).forEach(part => {
+    const m = part.match(/^\[(\d+)\]$/);
+    if (m) { const a = el("a", "cite", part); a.href = `#cite-${m[1]}`; box.append(a); }
+    else box.append(document.createTextNode(part));
+  });
+}
+
+function render(d) {
+  $("result").classList.remove("hidden"); $("details").classList.remove("hidden");
+  const reasons = { low_relevance: "no passage is relevant enough", unknown_term: "the question names something not in the corpus", no_candidates: "nothing was retrieved" };
+  $("badge").className = "badge " + (d.refused ? "stop" : "ok");
+  $("badge").textContent = d.refused ? "Refused" : "Answered";
+  const score = d.gate.max_score == null ? "n/a" : d.gate.max_score.toFixed(2);
+  $("meta").textContent = (d.refused ? `${reasons[d.gate.reason] || "insufficient evidence"} · ` : "")
+    + `best relevance ${score} (threshold ${d.gate.threshold}) · ${d.latency_ms.toFixed(0)} ms · ${d.answer_mode}`;
+  renderAnswer(d.answer);
+
+  const cites = $("citations"); cites.textContent = "";
+  if (!d.citations.length) cites.append(el("p", "legend", "No passages were cited because the evidence gate refused the question."));
+  d.citations.forEach(c => {
+    const card = el("div", "card"); card.id = `cite-${c.n}`;
+    const head = el("header");
+    head.append(el("span", "num", `[${c.n}]`), el("span", "title", c.title), el("span", "section", c.section));
+    const chips = el("div"); chips.append(channelChips(c.retrieved_by), el("span", "legend", ` relevance ${c.score.toFixed(2)}`));
+    card.append(head, chips, el("p", null, c.text));
+    if (c.url) { const a = el("a", null, "View label on DailyMed"); a.href = c.url; a.target = "_blank"; a.rel = "noopener"; card.append(a); }
+    cites.append(card);
+  });
+
+  const ents = $("entities"); ents.textContent = "";
+  if (!d.entities.length) ents.append(el("p", "legend", "No drug, class or enzyme recognised."));
+  d.entities.forEach(e => {
+    const chip = el("span", "entity", e.text === e.canonical ? e.canonical : `${e.text} → ${e.canonical}`);
+    chip.append(" ", el("small", null, e.kind.toLowerCase())); ents.append(chip);
+  });
+
+  const paths = $("paths"); paths.textContent = "";
+  if (!d.graph_paths.length) paths.append(el("p", "legend", "No path connects the entities in this question."));
+  d.graph_paths.forEach(p => {
+    const row = el("p", "path"); row.append(el("span", "kind", p.kind));
+    p.triples.forEach(([s, r, t], i) => {
+      if (i) row.append(" ; ");
+      row.append(s, " ", el("span", "rel", `—${r}→`), " ", t);
+    });
+    paths.append(row);
+  });
+
+  const table = $("candidates"); table.textContent = "";
+  const head = el("tr"); ["Passage", "Retrieved by", "Relevance"].forEach((h, i) => head.append(el("th", i === 2 ? "num" : null, h)));
+  table.append(head);
+  let cutDrawn = false;
+  d.candidates.forEach((c, i) => {
+    const tr = el("tr");
+    const next = d.candidates[i + 1];
+    if (!cutDrawn && c.rerank_score >= d.gate.threshold && (!next || next.rerank_score < d.gate.threshold)) { tr.className = "cut"; cutDrawn = true; }
+    const by = el("td"); by.append(channelChips(c.ranks));
+    tr.append(el("td", null, `${c.title.split(" (")[0]} · ${c.section.toLowerCase()}`), by, el("td", "num", c.rerank_score.toFixed(2)));
+    table.append(tr);
+  });
+
+  const timing = $("timing"), legend = $("legend"); timing.textContent = ""; legend.textContent = "";
+  const total = Object.values(d.timings_ms).reduce((a, b) => a + b, 0) || 1;
+  Object.entries(d.timings_ms).forEach(([stage, ms]) => {
+    const bar = el("span"); bar.style.width = `${100 * ms / total}%`; bar.style.background = STAGE_COLORS[stage] || "var(--muted)"; bar.title = `${stage}: ${ms} ms`;
+    timing.append(bar);
+    const dot = el("i"); dot.style.background = STAGE_COLORS[stage] || "var(--muted)";
+    legend.append(dot, `${stage} ${ms.toFixed(0)} ms`);
+  });
+}
+
+async function ask(text) {
+  text = text.trim(); if (text.length < 3) return;
+  $("go").disabled = true; $("go").textContent = "…";
+  try {
+    const res = await fetch("v1/query", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text }) });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    render(await res.json());
+    history.replaceState(null, "", `?q=${encodeURIComponent(text)}`);
+  } catch (err) {
+    $("result").classList.remove("hidden"); $("details").classList.add("hidden");
+    $("badge").className = "badge stop"; $("badge").textContent = "Error"; $("meta").textContent = "";
+    $("answer").textContent = err.message;
+  } finally { $("go").disabled = false; $("go").textContent = "Ask"; }
+}
+
+$("form").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); });
+const initial = new URLSearchParams(location.search).get("q");
+if (initial) { $("q").value = initial; ask(initial); }
+</script>
+</body>
+</html>

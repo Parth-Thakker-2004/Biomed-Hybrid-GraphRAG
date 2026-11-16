@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Secrets
+.env
+
+# Built artefacts: regenerate with `python scripts/build_indexes.py`
+data/index/
+# Per-drug ingestion cache: regenerate with `python scripts/ingest_data.py`
+data/raw/
+
+# Local backup of the pre-rewrite project
+.backup/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

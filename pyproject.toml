@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biomed-graphrag"
+version = "1.0.0"
+description = "Evidence-grounded drug-interaction question answering over FDA labels: hybrid retrieval, a knowledge graph, cross-encoder reranking and a calibrated refusal gate."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Parth-Thakker-2004" }]
+keywords = ["rag", "hybrid-search", "knowledge-graph", "bm25", "faiss", "cross-encoder", "openfda"]
+dependencies = [
+    "torch>=2.2",
+    "sentence-transformers>=3.0",
+    "transformers>=4.40",
+    "faiss-cpu>=1.8",
+    "networkx>=3.1",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.28",
+    "pydantic>=2.6",
+    "httpx>=0.27",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+include = ["core*", "api*"]
+
+[tool.setuptools.package-data]
+api = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "UP006", "UP007", "UP035", "B904", "B905"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
