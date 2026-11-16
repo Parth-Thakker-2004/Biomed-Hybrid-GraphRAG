@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "biomed-graphrag"
+name = "biomed-hybrid-graphrag"
 version = "1.0.0"
 description = "Evidence-grounded drug-interaction question answering over FDA labels: hybrid retrieval, a knowledge graph, cross-encoder reranking and a calibrated refusal gate."
 readme = "README.md"

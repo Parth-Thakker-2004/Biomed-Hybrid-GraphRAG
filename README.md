@@ -1,4 +1,4 @@
-# BioMed-GraphRAG
+# BioMed Hybrid GraphRAG
 
 Question answering over FDA drug labels that **cites its evidence and refuses when the labels
 don't contain an answer**. It combines BM25, dense retrieval and a knowledge graph extracted
